@@ -39,6 +39,30 @@ inputs:
     description: Pass --debug to Ogoron generation commands.
     required: false
     default: "false"
+  create-pr:
+    description: Create or update a pull request when generated artifacts change the repository.
+    required: false
+    default: "false"
+  pr-branch:
+    description: Branch used for generated artifact changes.
+    required: false
+    default: ogoron/generate
+  pr-title:
+    description: Pull request title.
+    required: false
+    default: Generate Ogoron test artifacts
+  commit-message:
+    description: Commit message used for generated artifacts.
+    required: false
+    default: Generate Ogoron test artifacts
+  author-name:
+    description: Git author name for generated commit.
+    required: false
+    default: ogoron-bot
+  author-email:
+    description: Git author email for generated commit.
+    required: false
+    default: agents@ogoron.com
 
 outputs:
   ogoron-bin:
@@ -47,6 +71,15 @@ outputs:
   git-scope:
     description: Resolved git scope used by the action.
     value: ${{ steps.generate.outputs.git-scope }}
+  changes-detected:
+    description: Whether generation changed repository files.
+    value: ${{ steps.generate.outputs.changes-detected }}
+  pull-request-url:
+    description: URL of the created or updated pull request, if any.
+    value: ${{ steps.pr.outputs.pull-request-url }}
+  branch-name:
+    description: Branch name used for generated artifacts.
+    value: ${{ inputs.pr-branch }}
 
 runs:
   using: composite
@@ -71,6 +104,21 @@ runs:
         INPUT_UI: ${{ inputs.ui }}
         INPUT_SCOPE: ${{ inputs.scope }}
         INPUT_DEBUG: ${{ inputs.debug }}
+        INPUT_AUTHOR_NAME: ${{ inputs.author-name }}
+        INPUT_AUTHOR_EMAIL: ${{ inputs.author-email }}
         OGORON_PLAIN: "1"
         NO_COLOR: "1"
         CI: "1"
+
+    - id: pr
+      name: Create pull request
+      if: ${{ inputs.create-pr == 'true' && steps.generate.outputs.changes-detected == 'true' }}
+      uses: peter-evans/create-pull-request@v7
+      with:
+        token: ${{ env.GITHUB_TOKEN }}
+        branch: ${{ inputs.pr-branch }}
+        title: ${{ inputs.pr-title }}
+        commit-message: ${{ inputs.commit-message }}
+        body-path: ${{ steps.generate.outputs.pr-body-path }}
+        author: ${{ inputs.author-name }} <${{ inputs.author-email }}>
+        committer: ${{ inputs.author-name }} <${{ inputs.author-email }}>

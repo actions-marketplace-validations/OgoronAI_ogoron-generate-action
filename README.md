@@ -25,6 +25,12 @@ Provide secrets via workflow `env`, not action inputs.
 | `cli-version` | no | `5.2.0` | Ogoron CLI release version to download. Versions older than `5.2.0` are rejected. |
 | `download-url` | no |  | Explicit Linux bundle URL override. |
 | `debug` | no | `false` | Pass `--debug` to Ogoron generation commands. |
+| `create-pr` | no | `false` | Create or update a pull request when generation changes repository files. |
+| `pr-branch` | no | `ogoron/generate` | Branch used for generated artifact changes. |
+| `pr-title` | no | `Generate Ogoron test artifacts` | Pull request title. |
+| `commit-message` | no | `Generate Ogoron test artifacts` | Commit message used for generated artifacts. |
+| `author-name` | no | `ogoron-bot` | Git author name for the generated commit. |
+| `author-email` | no | `agents@ogoron.com` | Git author email for the generated commit. |
 
 ## Outputs
 
@@ -32,6 +38,9 @@ Provide secrets via workflow `env`, not action inputs.
 | --- | --- |
 | `ogoron-bin` | Absolute path to the downloaded Ogoron executable. |
 | `git-scope` | Resolved git scope used by the action. |
+| `changes-detected` | Whether generation changed repository files. |
+| `pull-request-url` | URL of the created or updated pull request, if any. |
+| `branch-name` | Branch name used for generated artifacts. |
 
 ## Notes
 
@@ -40,3 +49,4 @@ Provide secrets via workflow `env`, not action inputs.
   - `ogoron generate test-cases --git-scope <scope>`
   - `ogoron generate autotests`
 - `api=true` is a temporary workaround. The current CLI does not expose a first-class diff-based API generation command, so this action feeds a structured English prompt derived from `scope` into `ogoron generate api-tests`.
+- When `create-pr=true`, the action commits generated changes locally and then opens or updates a pull request through `peter-evans/create-pull-request`.
