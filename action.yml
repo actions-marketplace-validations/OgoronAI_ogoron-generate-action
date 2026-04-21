@@ -1,0 +1,76 @@
+name: Ogoron Generate
+description: Generate unit, API, and UI test artifacts with Ogoron on Linux runners.
+author: OgoronAI
+branding:
+  icon: cpu
+  color: blue
+
+inputs:
+  unit:
+    description: Generate unit tests from git diff.
+    required: false
+    default: "false"
+  api:
+    description: Generate API tests using a git-scope-driven prompt workaround.
+    required: false
+    default: "false"
+  ui:
+    description: Generate UI test cases from git diff and materialize autotests.
+    required: false
+    default: "false"
+  scope:
+    description: >
+      Git scope. Supports values accepted by the CLI, such as commit:abc123,
+      branch:feature/new-auth, date:2024-01-01, since:HEAD~5. Defaults to the current branch.
+    required: false
+    default: ""
+  working-directory:
+    description: Repository directory where commands should run.
+    required: false
+    default: .
+  cli-version:
+    description: Ogoron CLI release version to download.
+    required: false
+    default: 5.2.0
+  download-url:
+    description: Explicit Linux bundle URL override.
+    required: false
+  debug:
+    description: Pass --debug to Ogoron generation commands.
+    required: false
+    default: "false"
+
+outputs:
+  ogoron-bin:
+    description: Absolute path to the downloaded Ogoron executable.
+    value: ${{ steps.install.outputs.ogoron-bin }}
+  git-scope:
+    description: Resolved git scope used by the action.
+    value: ${{ steps.generate.outputs.git-scope }}
+
+runs:
+  using: composite
+  steps:
+    - id: install
+      name: Install Ogoron
+      shell: bash
+      run: "${{ github.action_path }}/scripts/install-ogoron.sh"
+      env:
+        INPUT_CLI_VERSION: ${{ inputs.cli-version }}
+        INPUT_DOWNLOAD_URL: ${{ inputs.download-url }}
+
+    - id: generate
+      name: Generate artifacts
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: "${{ github.action_path }}/scripts/run-generate.sh"
+      env:
+        OGORON_BIN: ${{ steps.install.outputs.ogoron-bin }}
+        INPUT_UNIT: ${{ inputs.unit }}
+        INPUT_API: ${{ inputs.api }}
+        INPUT_UI: ${{ inputs.ui }}
+        INPUT_SCOPE: ${{ inputs.scope }}
+        INPUT_DEBUG: ${{ inputs.debug }}
+        OGORON_PLAIN: "1"
+        NO_COLOR: "1"
+        CI: "1"
