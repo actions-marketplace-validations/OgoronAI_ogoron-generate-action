@@ -50,3 +50,17 @@ Provide secrets via workflow `env`, not action inputs.
   - `ogoron generate autotests`
 - `api=true` is a temporary workaround. The current CLI does not expose a first-class diff-based API generation command, so this action feeds a structured English prompt derived from `scope` into `ogoron generate api-tests`.
 - When `create-pr=true`, the action commits generated changes locally and then opens or updates a pull request through `peter-evans/create-pull-request`.
+
+## Related actions
+
+- [`Ogoron Setup`](https://github.com/OgoronAI/ogoron-setup-action) to bootstrap the repository before generation
+- [`Ogoron Run`](https://github.com/OgoronAI/ogoron-run-action) to execute generated tests in CI
+- [`Ogoron Heal`](https://github.com/OgoronAI/ogoron-heal-action) to recover from failing generated tests
+- [`Ogoron Exec`](https://github.com/OgoronAI/ogoron-exec-action) for custom command-level workflows
+
+## Recommended flow
+
+1. Run `setup` once and merge the bootstrap PR.
+2. Use `generate` on feature branches or pull requests.
+3. Use `create-pr=true` when generated artifacts should be delivered back into the repository automatically.
+4. Follow generation with `run`.
